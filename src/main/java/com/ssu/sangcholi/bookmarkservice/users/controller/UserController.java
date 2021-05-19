@@ -4,14 +4,10 @@ import com.ssu.sangcholi.bookmarkservice.users.dto.UserDto;
 import com.ssu.sangcholi.bookmarkservice.users.service.UserService;
 import com.ssu.sangcholi.bookmarkservice.users.vo.RequestUser;
 import com.ssu.sangcholi.bookmarkservice.users.vo.ResponseUser;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +40,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<EntityModel<ResponseUser>> getUserByUserId(String userId) {
+    public ResponseEntity<EntityModel<ResponseUser>> getUserByUserId(@PathVariable("userId") String userId) {
         UserDto findUser = userService.getUserByUserId(userId);
         EntityModel<ResponseUser> body = EntityModel.of(
                 modelMapper.map(findUser, ResponseUser.class),
