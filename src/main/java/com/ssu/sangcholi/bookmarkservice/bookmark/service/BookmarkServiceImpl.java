@@ -5,15 +5,13 @@ import com.ssu.sangcholi.bookmarkservice.bookmark.entity.Bookmark;
 import com.ssu.sangcholi.bookmarkservice.bookmark.exception.NotFindBookmark;
 import com.ssu.sangcholi.bookmarkservice.bookmark.repository.BookmarkRepository;
 import com.ssu.sangcholi.bookmarkservice.users.entity.Users;
-import com.ssu.sangcholi.bookmarkservice.users.exception.NoFindUserException;
+import com.ssu.sangcholi.bookmarkservice.users.exception.NotFindUserException;
 import com.ssu.sangcholi.bookmarkservice.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,14 +23,15 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     @Override
     public List<BookmarkDto> getAllBookmarkByUserId(String userId) {
-        return bookmarkRepository.findAll().stream()
+        userRepository.findIdByUserId(userId).orElseThrow(NotFindUserException::new);
+        return bookmarkRepository.findAllByUserId(userId).stream()
                 .map(bookmark -> modelMapper.map(bookmark, BookmarkDto.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     public BookmarkDto addBookmark(String userId, BookmarkDto bookmarkDto) {
-        Users user = userRepository.findByUserId(userId).orElseThrow(() -> new NoFindUserException(userId));
+        Users user = userRepository.findByUserId(userId).orElseThrow(NotFindUserException::new);
         Bookmark bookmark = Bookmark.builder().original(bookmarkDto.getOriginal())
                 .summarization(bookmarkDto.getSummarization())
                 .build();
@@ -43,14 +42,15 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     @Override
     public void deleteBookmark(String userId, Long bookmarkId) {
+        userRepository.findIdByUserId(userId).orElseThrow(NotFindUserException::new);
         Bookmark bookmark = bookmarkRepository.findByUserAndId(userId, bookmarkId).orElseThrow(NotFindBookmark::new);
         bookmarkRepository.delete(bookmark);
     }
 
     @Override
-    public BookmarkDto getBookmarkByUserIdAndBookmarkId(String UserId, Long BookmarkId) {
-        userRepository.findByUserId(UserId).orElseThrow(() -> new NoFindUserException(UserId));
-        Bookmark bookmark = bookmarkRepository.findByUserAndId(UserId, BookmarkId).orElseThrow(NotFindBookmark::new);
+    public BookmarkDto getBookmarkByUserIdAndBookmarkId(String userId, Long BookmarkId) {
+        userRepository.findIdByUserId(userId).orElseThrow(NotFindUserException::new);
+        Bookmark bookmark = bookmarkRepository.findByUserAndId(userId, BookmarkId).orElseThrow(NotFindBookmark::new);
         return modelMapper.map(bookmark, BookmarkDto.class);
     }
 }

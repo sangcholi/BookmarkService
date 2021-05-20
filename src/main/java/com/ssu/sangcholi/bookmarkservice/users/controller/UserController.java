@@ -59,4 +59,11 @@ public class UserController {
                 .created(linkTo(methodOn(this.getClass()).getUserByUserId(createdUser.getUserId())).toUri())
                 .body(body);
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity deleteUser(@PathVariable String userId) {
+
+        return null;
+    }
+
 }

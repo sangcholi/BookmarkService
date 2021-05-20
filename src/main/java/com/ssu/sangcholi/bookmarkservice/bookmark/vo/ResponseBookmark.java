@@ -21,9 +21,9 @@ public class ResponseBookmark extends EntityModel<BookmarkDto> {
     public String original;
     public String summarization;
 
-    public ResponseBookmark(BookmarkDto content) {
+    public ResponseBookmark(String userId,BookmarkDto content) {
         super(content);
-        add(linkTo(BookmarkController.class).slash(content.getId()).withSelfRel());
-        add(linkTo(BookmarkController.class).slash(content.getId()).withRel("delete"));
+        add(linkTo(BookmarkController.class).slash(userId).slash(content.getId()).withSelfRel());
+        add(linkTo(BookmarkController.class).slash(userId).slash(content.getId()).withRel("delete"));
     }
 }

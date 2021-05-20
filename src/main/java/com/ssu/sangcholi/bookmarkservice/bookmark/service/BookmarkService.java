@@ -12,5 +12,5 @@ public interface BookmarkService {
 
     void deleteBookmark(String userId, Long bookmarkId);
 
-    BookmarkDto getBookmarkByUserIdAndBookmarkId(String UserId, Long BookmarkId);
+    BookmarkDto getBookmarkByUserIdAndBookmarkId(String userId, Long BookmarkId);
 }

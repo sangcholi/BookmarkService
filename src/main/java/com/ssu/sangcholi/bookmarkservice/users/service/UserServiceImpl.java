@@ -2,7 +2,7 @@ package com.ssu.sangcholi.bookmarkservice.users.service;
 
 import com.ssu.sangcholi.bookmarkservice.users.dto.UserDto;
 import com.ssu.sangcholi.bookmarkservice.users.entity.Users;
-import com.ssu.sangcholi.bookmarkservice.users.exception.NoFindUserException;
+import com.ssu.sangcholi.bookmarkservice.users.exception.NotFindUserException;
 import com.ssu.sangcholi.bookmarkservice.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto getUserByUserId(String userId) {
         Users findUser = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new NoFindUserException(userId));
+                .orElseThrow(NotFindUserException::new);
         return modelMapper.map(findUser, UserDto.class);
     }
 
@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         Users user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new NoFindUserException(userId));
+                .orElseThrow(NotFindUserException::new);
         return new User(user.getUserId(), user.getPassword(), new ArrayList<>());
     }
 }
