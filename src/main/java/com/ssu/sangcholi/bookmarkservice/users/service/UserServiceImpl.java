@@ -1,7 +1,9 @@
 package com.ssu.sangcholi.bookmarkservice.users.service;
 
+import com.ssu.sangcholi.bookmarkservice.bookmark.repository.BookmarkRepository;
 import com.ssu.sangcholi.bookmarkservice.users.dto.UserDto;
 import com.ssu.sangcholi.bookmarkservice.users.entity.Users;
+import com.ssu.sangcholi.bookmarkservice.users.exception.DuplicatedIdException;
 import com.ssu.sangcholi.bookmarkservice.users.exception.NotFindUserException;
 import com.ssu.sangcholi.bookmarkservice.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
 
@@ -47,6 +51,9 @@ public class UserServiceImpl implements UserService {
                 .userId(userDto.getUserId())
                 .password(passwordEncoder.encode(userDto.getPassword()))
                 .build();
+        if (userRepository.findIdByUserId(newUser.getUserId()).isPresent()) {
+            throw new DuplicatedIdException();
+        }
         Users returnUser = userRepository.save(newUser);
         return modelMapper.map(returnUser, UserDto.class);
     }
@@ -56,5 +63,20 @@ public class UserServiceImpl implements UserService {
         Users user = userRepository.findByUserId(userId)
                 .orElseThrow(NotFindUserException::new);
         return new User(user.getUserId(), user.getPassword(), new ArrayList<>());
+    }
+
+    @Override
+    public void checkUserId(String userId) {
+        Optional<Users> byUserId = userRepository.findByUserId(userId);
+        if (byUserId.isPresent()) {
+            throw new DuplicatedIdException();
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(String userId) {
+        Users user = userRepository.findByUserId(userId).orElseThrow(NotFindUserException::new);
+        userRepository.delete(user);
     }
 }

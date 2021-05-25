@@ -2,11 +2,10 @@ package com.ssu.sangcholi.bookmarkservice.bookmark.service;
 
 import com.ssu.sangcholi.bookmarkservice.bookmark.dto.BookmarkDto;
 import com.ssu.sangcholi.bookmarkservice.bookmark.entity.Bookmark;
-import com.ssu.sangcholi.bookmarkservice.bookmark.exception.NotFindBookmark;
-import com.ssu.sangcholi.bookmarkservice.bookmark.repository.BookmarkRepository;
+import com.ssu.sangcholi.bookmarkservice.bookmark.exception.NotFindBookmarkExcption;
 import com.ssu.sangcholi.bookmarkservice.users.entity.Users;
-import com.ssu.sangcholi.bookmarkservice.users.exception.NoFindUserException;
-import com.ssu.sangcholi.bookmarkservice.users.repository.UserRepository;
+import com.ssu.sangcholi.bookmarkservice.users.exception.NotFindUserException;
+import com.ssu.sangcholi.bookmarkservice.users.service.UserService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,10 +13,13 @@ import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.List;
 
 @SpringBootTest
 @Transactional
@@ -60,7 +62,7 @@ class BookmarkServiceTest {
         // when
         Assertions.assertThatThrownBy(() -> bookmarkService
                 .getBookmarkByUserIdAndBookmarkId("no one", bookmark.getId()))
-                .isExactlyInstanceOf(NoFindUserException.class);
+                .isExactlyInstanceOf(NotFindUserException.class);
     }
 
     @Test
@@ -68,7 +70,7 @@ class BookmarkServiceTest {
     public void findBookmarkFailBecauseOfBookmarkId() throws Exception {
         Assertions.assertThatThrownBy(() -> bookmarkService
                 .getBookmarkByUserIdAndBookmarkId(mockUser.getUserId(), 100L))
-                .isExactlyInstanceOf(NotFindBookmark.class);
+                .isExactlyInstanceOf(NotFindBookmarkExcption.class);
     }
 
 
@@ -81,7 +83,7 @@ class BookmarkServiceTest {
         // when
         BookmarkDto savedBookmark = bookmarkService.addBookmark(mockUser.getUserId(), bookmarkDto);
         //then
-        Assertions.assertThat(bookmarkDto).isEqualTo(savedBookmark);
+        Assertions.assertThat(savedBookmark).extracting("original").isEqualTo(bookmarkDto.getOriginal());
     }
 
     @Test
@@ -93,7 +95,7 @@ class BookmarkServiceTest {
         // when
         //then
         Assertions.assertThatThrownBy(() -> bookmarkService.addBookmark("no one", bookmarkDto))
-                .isExactlyInstanceOf(NoFindUserException.class);
+                .isExactlyInstanceOf(NotFindUserException.class);
     }
 
     @Test
@@ -117,7 +119,74 @@ class BookmarkServiceTest {
         bookmark.saveUser(mockUser);
         // when & then
         Assertions.assertThatThrownBy(() -> bookmarkService.deleteBookmark("no one", bookmark.getId()))
-                .isExactlyInstanceOf(NotFindBookmark.class);
+                .isExactlyInstanceOf(NotFindUserException.class);
+    }
+
+
+    @Test
+    @DisplayName("북마크 모두 조회")
+    public void findAllBookmark() throws Exception {
+        Bookmark bookmark1 = Bookmark.builder().original("bookmark1").summarization("sum").build();
+        Bookmark bookmark2 = Bookmark.builder().original("bookmark2").summarization("sum").build();
+        Bookmark bookmark3 = Bookmark.builder().original("bookmark3").summarization("sum").build();
+        em.persist(bookmark1);
+        em.persist(bookmark2);
+        em.persist(bookmark3);
+
+        bookmark1.saveUser(mockUser);
+        bookmark2.saveUser(mockUser);
+        bookmark3.saveUser(mockUser);
+
+        em.flush();
+        em.clear();
+
+        List<BookmarkDto> bookmarks = bookmarkService.getAllBookmarkByUserId(mockUser.getUserId());
+        Assertions.assertThat(bookmarks).extracting("original")
+                .contains(bookmark1.getOriginal(), bookmark2.getOriginal(), bookmark3.getOriginal());
+    }
+
+    @Test
+    @DisplayName("없는 UserId로 북마크 모두 조회 실패")
+    public void findAllBookmarkFailByUserId() throws Exception {
+        Bookmark bookmark1 = Bookmark.builder().original("bookmark1").summarization("sum").build();
+        Bookmark bookmark2 = Bookmark.builder().original("bookmark2").summarization("sum").build();
+        Bookmark bookmark3 = Bookmark.builder().original("bookmark3").summarization("sum").build();
+        em.persist(bookmark1);
+        em.persist(bookmark2);
+        em.persist(bookmark3);
+
+        bookmark1.saveUser(mockUser);
+        bookmark2.saveUser(mockUser);
+        bookmark3.saveUser(mockUser);
+
+        em.flush();
+        em.clear();
+
+        Assertions.assertThatThrownBy(() -> bookmarkService.getAllBookmarkByUserId("no one"))
+                .isExactlyInstanceOf(NotFindUserException.class);
+
+    }
+
+    @Test
+    @DisplayName("페이징 사용하여 북마크 모두 조회")
+    public void findAllBookmarkUsingPaging() throws Exception {
+        Bookmark bookmark1 = Bookmark.builder().original("bookmark1").summarization("sum").build();
+        Bookmark bookmark2 = Bookmark.builder().original("bookmark2").summarization("sum").build();
+        Bookmark bookmark3 = Bookmark.builder().original("bookmark3").summarization("sum").build();
+        em.persist(bookmark1);
+        em.persist(bookmark2);
+        em.persist(bookmark3);
+
+        bookmark1.saveUser(mockUser);
+        bookmark2.saveUser(mockUser);
+        bookmark3.saveUser(mockUser);
+
+        PageRequest pageRequest = PageRequest.of(0, 2);
+        Page<BookmarkDto> bookmarks = bookmarkService.getAllBookmarkByUserIdUsingPaging(mockUser.getUserId(), pageRequest);
+
+
+        Assertions.assertThat(bookmarks).extracting("original")
+                .contains(bookmark1.getOriginal(), bookmark2.getOriginal());
     }
 
 

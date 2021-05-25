@@ -41,7 +41,7 @@ class BookmarkControllerTest {
 
     @Test
     @DisplayName("Bookmark 생성 요청")
-    public void getBookmark() throws Exception {
+    public void postBookmark() throws Exception {
         // given
         Users user = Users.builder().userId("user1").password("123").build();
         Bookmark bookmark = Bookmark.builder().original("original").summarization("sum").build();
@@ -53,7 +53,8 @@ class BookmarkControllerTest {
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(jsonPath("original").value(dto.getOriginal()))
                 .andExpect(jsonPath("summarization").value(dto.getSummarization()))
-                .andExpect(status().isOk());
+                .andDo(print())
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -99,16 +100,48 @@ class BookmarkControllerTest {
     public void retrieveBookmarkAll() throws Exception {
         // given
         Users user = Users.builder().userId("mockuser").password("123").build();
-        Bookmark bookmark = Bookmark.builder().original("org").summarization("sum").build();
+        Bookmark bookmark1 = Bookmark.builder().original("org").summarization("sum").build();
+        Bookmark bookmark2 = Bookmark.builder().original("org").summarization("sum").build();
+        Bookmark bookmark3 = Bookmark.builder().original("org").summarization("sum").build();
         em.persist(user);
-        em.persist(bookmark);
-        bookmark.saveUser(user);
+        em.persist(bookmark1);
+        em.persist(bookmark2);
+        em.persist(bookmark3);
+        bookmark1.saveUser(user);
+        bookmark2.saveUser(user);
+        bookmark3.saveUser(user);
+
+        // when & then
+        mockMvc.perform(get(String.format("/bookmarks/%s?page=0&size=2", user.getUserId())))
+                .andDo(print())
+                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].original").value(bookmark1.getOriginal()))
+                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].summarization").value(bookmark1.getSummarization()))
+                .andExpect(jsonPath("page.size").value(2))
+                .andExpect(jsonPath("page.totalElements").value(3))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Paging 사용 없이 Bookmark 전체 조회")
+    public void retrieveBookmarkAllUsingPaging() throws Exception {
+        // given
+        Users user = Users.builder().userId("mockuser").password("123").build();
+        Bookmark bookmark1 = Bookmark.builder().original("org").summarization("sum").build();
+        Bookmark bookmark2 = Bookmark.builder().original("org").summarization("sum").build();
+        Bookmark bookmark3 = Bookmark.builder().original("org").summarization("sum").build();
+        em.persist(user);
+        em.persist(bookmark1);
+        em.persist(bookmark2);
+        em.persist(bookmark3);
+        bookmark1.saveUser(user);
+        bookmark2.saveUser(user);
+        bookmark3.saveUser(user);
 
         // when & then
         mockMvc.perform(get(String.format("/bookmarks/%s", user.getUserId())))
                 .andDo(print())
-                .andExpect(jsonPath("$[0].original").value(bookmark.getOriginal()))
-                .andExpect(jsonPath("$[0].summarization").value(bookmark.getSummarization()))
+                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].original").value(bookmark1.getOriginal()))
+                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].summarization").value(bookmark1.getSummarization()))
                 .andExpect(status().isOk());
     }
 

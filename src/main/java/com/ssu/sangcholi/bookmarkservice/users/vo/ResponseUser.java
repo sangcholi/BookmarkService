@@ -1,19 +1,21 @@
 package com.ssu.sangcholi.bookmarkservice.users.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
+import com.ssu.sangcholi.bookmarkservice.users.controller.UserController;
+import com.ssu.sangcholi.bookmarkservice.users.dto.UserDto;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ResponseUser {
-    public Integer id;
-    public String userId;
+public class ResponseUser extends EntityModel<UserDto> {
+    public ResponseUser(UserDto userDto) {
+        super(userDto);
+        userDto.setPassword(null);
+        add(linkTo(UserController.class).slash(userDto.getUserId()).withSelfRel());
+    }
 
 }

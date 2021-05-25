@@ -1,9 +1,9 @@
 package com.ssu.sangcholi.bookmarkservice.bookmark.exception;
 
-public class NotFindBookmark extends RuntimeException {
+public class NotFindBookmarkExcption extends RuntimeException {
     private static final String MESSAGE = "Not Find bookmark";
 
-    public NotFindBookmark() {
+    public NotFindBookmarkExcption() {
         super(MESSAGE);
     }
 }

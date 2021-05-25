@@ -6,13 +6,12 @@ import com.ssu.sangcholi.bookmarkservice.users.vo.RequestUser;
 import com.ssu.sangcholi.bookmarkservice.users.vo.ResponseUser;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import javax.validation.Valid;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -24,37 +23,28 @@ public class UserController {
     private final UserService userService;
     private final ModelMapper modelMapper;
 
-    @GetMapping
-    public ResponseEntity<List<EntityModel<ResponseUser>>> getAllUsers() {
-        List<UserDto> users = userService.findAllUsers();
-        List<EntityModel<ResponseUser>> body = users.stream()
-                .map(user ->
-                        EntityModel.of(
-                                modelMapper.map(user, ResponseUser.class),
-                                linkTo(methodOn(this.getClass()).getUserByUserId(user.getUserId())).withSelfRel(),
-                                linkTo(methodOn(this.getClass()).getAllUsers()).withRel("all-users")
-                        )
-                ).collect(Collectors.toList());
-
-        return ResponseEntity.ok(body);
+    @GetMapping("/checkid/{userId}")
+    public ResponseEntity checkUserId(@PathVariable String userId) {
+        userService.checkUserId(userId);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<EntityModel<ResponseUser>> getUserByUserId(@PathVariable("userId") String userId) {
+    public ResponseEntity<ResponseUser> getUserByUserId(@PathVariable String userId) {
         UserDto findUser = userService.getUserByUserId(userId);
-        EntityModel<ResponseUser> body = EntityModel.of(
-                modelMapper.map(findUser, ResponseUser.class),
-                linkTo(methodOn(this.getClass()).getUserByUserId(findUser.getUserId())).withSelfRel(),
-                linkTo(methodOn(this.getClass()).getAllUsers()).withSelfRel()
-        );
+        ResponseUser body = new ResponseUser(findUser);
         return ResponseEntity.ok(body);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<ResponseUser> createUser(@RequestBody RequestUser requestUser) {
+    public ResponseEntity<ResponseUser> createUser(@RequestBody @Valid RequestUser requestUser, Errors error) {
+        if (error.hasErrors()) {
+            return ResponseEntity.badRequest().build();
+        }
         UserDto userDto = modelMapper.map(requestUser, UserDto.class);
         UserDto createdUser = userService.createUser(userDto);
-        ResponseUser body = modelMapper.map(createdUser, ResponseUser.class);
+        ResponseUser body = new ResponseUser(createdUser);
+
         return ResponseEntity
                 .created(linkTo(methodOn(this.getClass()).getUserByUserId(createdUser.getUserId())).toUri())
                 .body(body);
@@ -62,8 +52,8 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity deleteUser(@PathVariable String userId) {
-
-        return null;
+        userService.deleteUser(userId);
+        return ResponseEntity.ok().build();
     }
 
 }
