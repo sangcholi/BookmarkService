@@ -77,6 +77,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(String userId) {
         Users user = userRepository.findByUserId(userId).orElseThrow(NotFindUserException::new);
-        userRepository.delete(user);
+        bookmarkRepository.deleteByUserId(user);
+        userRepository.deleteOptimal(user);
     }
 }

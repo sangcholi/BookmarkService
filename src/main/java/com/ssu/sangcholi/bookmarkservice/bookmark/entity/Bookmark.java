@@ -33,7 +33,6 @@ public class Bookmark {
     private Users user;
 
     public void saveUser(Users user) {
-        user.getBookmarkList().add(this);
         this.user = user;
     }
 

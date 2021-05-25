@@ -22,8 +22,6 @@ public class Users {
     private String userId;
     @Column(nullable = false)
     private String password;
-    @OneToMany(mappedBy = "user",cascade = CascadeType.REMOVE)
-    private List<Bookmark> bookmarkList = new ArrayList<>();
 
     @Builder
     public Users(String userId, String password) {

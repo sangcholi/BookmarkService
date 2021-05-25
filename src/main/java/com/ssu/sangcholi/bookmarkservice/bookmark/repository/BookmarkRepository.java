@@ -1,9 +1,11 @@
 package com.ssu.sangcholi.bookmarkservice.bookmark.repository;
 
 import com.ssu.sangcholi.bookmarkservice.bookmark.entity.Bookmark;
+import com.ssu.sangcholi.bookmarkservice.users.entity.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -20,4 +22,8 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
     @Query(value = "select bm from Bookmark bm join bm.user user where user.userId = :userId")
     public Page<Bookmark> findAllByUserId(String userId, Pageable pageable);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "delete from Bookmark bm where bm.user = :user")
+    public void deleteByUserId(Users user);
 }
