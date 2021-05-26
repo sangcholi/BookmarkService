@@ -114,10 +114,8 @@ class BookmarkControllerTest {
         // when & then
         mockMvc.perform(get(String.format("/bookmarks/%s?page=0&size=2", user.getUserId())))
                 .andDo(print())
-                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].original").value(bookmark1.getOriginal()))
-                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].summarization").value(bookmark1.getSummarization()))
-                .andExpect(jsonPath("page.size").value(2))
-                .andExpect(jsonPath("page.totalElements").value(3))
+                .andExpect(jsonPath("totalPages").value(2))
+                .andExpect(jsonPath("totalElements").value(3))
                 .andExpect(status().isOk());
     }
 
@@ -140,8 +138,6 @@ class BookmarkControllerTest {
         // when & then
         mockMvc.perform(get(String.format("/bookmarks/%s", user.getUserId())))
                 .andDo(print())
-                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].original").value(bookmark1.getOriginal()))
-                .andExpect(jsonPath("_embedded.bookmarkDtoList[0].summarization").value(bookmark1.getSummarization()))
                 .andExpect(status().isOk());
     }
 

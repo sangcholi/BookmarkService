@@ -25,14 +25,13 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 public class BookmarkController {
     private final BookmarkService bookmarkService;
     private final ModelMapper modelMapper;
-    private final PagedResourcesAssembler<BookmarkDto> assembler;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<PagedModel<ResponseBookmark>> getAllBookmarkUsingPaging(@PathVariable String userId,
-                                                                                  Pageable pageable) {
+    public ResponseEntity<Page<ResponseBookmark>> getAllBookmarkUsingPaging(@PathVariable String userId,
+                                                                            Pageable pageable) {
         Page<BookmarkDto> bookmarks = bookmarkService.getAllBookmarkByUserIdUsingPaging(userId, pageable);
-        PagedModel<ResponseBookmark> responseBookmarks =
-                assembler.toModel(bookmarks, bookmark -> new ResponseBookmark(userId, bookmark));
+        Page<ResponseBookmark> responseBookmarks = bookmarks.map(
+                bookmarkDto -> new ResponseBookmark(bookmarkDto));
         return ResponseEntity.ok(responseBookmarks);
     }
 
@@ -40,7 +39,7 @@ public class BookmarkController {
     public ResponseEntity<ResponseBookmark> getBookmark(@PathVariable String userId,
                                                         @PathVariable Long bookmarkId) {
         BookmarkDto findBookmark = bookmarkService.getBookmarkByUserIdAndBookmarkId(userId, bookmarkId);
-        ResponseBookmark responseBookmark = new ResponseBookmark(userId, findBookmark);
+        ResponseBookmark responseBookmark = new ResponseBookmark(findBookmark);
         return ResponseEntity.ok(responseBookmark);
     }
 
@@ -53,7 +52,7 @@ public class BookmarkController {
         }
         BookmarkDto bookmarkDto = modelMapper.map(requestBookmark, BookmarkDto.class);
         BookmarkDto bookmark = bookmarkService.addBookmark(userId, bookmarkDto);
-        ResponseBookmark body = new ResponseBookmark(userId, bookmark);
+        ResponseBookmark body = new ResponseBookmark(bookmark);
         return ResponseEntity
                 .created(linkTo(BookmarkController.class).slash(userId).slash(bookmark.getId()).toUri())
                 .body(body);

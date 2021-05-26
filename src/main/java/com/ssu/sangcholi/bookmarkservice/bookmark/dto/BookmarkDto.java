@@ -15,5 +15,5 @@ public class BookmarkDto {
     public Long id;
     public String original;
     public String summarization;
-    private LocalDateTime createAt;
+    public LocalDateTime createAt;
 }
